@@ -8,7 +8,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Label helloLabel = new Label("Hello, World!");
+        Label helloLabel = new Label("Helloo, World!");
         StackPane root = new StackPane();
         root.getChildren().add(helloLabel);
 
