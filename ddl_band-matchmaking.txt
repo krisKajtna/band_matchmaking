@@ -1,0 +1,184 @@
+/*
+Created: 18. 05. 2024
+Modified: 18. 05. 2024
+Model: PostgreSQL 10
+Database: PostgreSQL 10
+*/
+
+
+-- Create tables section -------------------------------------------------
+
+-- Table genres
+
+CREATE TABLE "genres"(
+ "id" Serial NOT NULL,
+ "name" Character varying(50) NOT NULL,
+ "description" Character varying(100)
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Add keys for table genres
+
+ALTER TABLE "genres" ADD CONSTRAINT "PK_genres" PRIMARY KEY ("id")
+;
+
+-- Table cities
+
+CREATE TABLE "cities"(
+ "id" Serial NOT NULL,
+ "name" Character varying(100) NOT NULL,
+ "postal_code" Integer NOT NULL
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Add keys for table cities
+
+ALTER TABLE "cities" ADD CONSTRAINT "PK_cities" PRIMARY KEY ("id")
+;
+
+-- Table bands
+
+CREATE TABLE "bands"(
+ "id" Serial NOT NULL,
+ "name" Character varying(100) NOT NULL,
+ "no_musicians" Integer,
+ "genre_id" Integer NOT NULL,
+ "city_id" Integer NOT NULL
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Create indexes for table bands
+
+CREATE INDEX "IX_Relationship3" ON "bands" ("genre_id")
+;
+
+CREATE INDEX "IX_Relationship4" ON "bands" ("city_id")
+;
+
+-- Add keys for table bands
+
+ALTER TABLE "bands" ADD CONSTRAINT "PK_bands" PRIMARY KEY ("id")
+;
+
+-- Table instruments
+
+CREATE TABLE "instruments"(
+ "id" Serial NOT NULL,
+ "name" Character varying(40) NOT NULL,
+ "descriptioin" Character varying(255)
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Add keys for table instruments
+
+ALTER TABLE "instruments" ADD CONSTRAINT "PK_instruments" PRIMARY KEY ("id")
+;
+
+-- Table musicians
+
+CREATE TABLE "musicians"(
+ "id" Serial NOT NULL,
+ "name" Character varying(50) NOT NULL,
+ "surname" Character varying(50) NOT NULL,
+ "mail" Character varying(100) NOT NULL,
+ "password" Character varying(255) NOT NULL,
+ "experience" Integer NOT NULL,
+ "video" Character varying(255),
+ "city_id" Integer NOT NULL
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Create indexes for table musicians
+
+CREATE INDEX "IX_Relationship5" ON "musicians" ("city_id")
+;
+
+-- Add keys for table musicians
+
+ALTER TABLE "musicians" ADD CONSTRAINT "PK_musicians" PRIMARY KEY ("id")
+;
+
+-- Table instruments_musicians
+
+CREATE TABLE "instruments_musicians"(
+ "id" Serial NOT NULL,
+ "musician_id" Integer NOT NULL,
+ "instrument_id" Integer
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Create indexes for table instruments_musicians
+
+CREATE INDEX "IX_Relationship6" ON "instruments_musicians" ("musician_id")
+;
+
+CREATE INDEX "IX_Relationship7" ON "instruments_musicians" ("instrument_id")
+;
+
+-- Add keys for table instruments_musicians
+
+ALTER TABLE "instruments_musicians" ADD CONSTRAINT "PK_instruments_musicians" PRIMARY KEY ("id")
+;
+
+-- Table bands_musicians
+
+CREATE TABLE "bands_musicians"(
+ "id" Serial NOT NULL,
+ "status" Character varying(20) NOT NULL,
+ "bands_id" Integer NOT NULL,
+ "musician_id" Integer
+)
+WITH (
+ autovacuum_enabled=true)
+;
+
+-- Create indexes for table bands_musicians
+
+CREATE INDEX "IX_Relationship8" ON "bands_musicians" ("bands_id")
+;
+
+CREATE INDEX "IX_Relationship9" ON "bands_musicians" ("musician_id")
+;
+
+-- Add keys for table bands_musicians
+
+ALTER TABLE "bands_musicians" ADD CONSTRAINT "PK_bands_musicians" PRIMARY KEY ("id")
+;
+-- Create foreign keys (relationships) section ------------------------------------------------- 
+
+ALTER TABLE "bands" ADD CONSTRAINT "Relationship3" FOREIGN KEY ("genre_id") REFERENCES "genres" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "bands" ADD CONSTRAINT "Relationship4" FOREIGN KEY ("city_id") REFERENCES "cities" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "musicians" ADD CONSTRAINT "Relationship5" FOREIGN KEY ("city_id") REFERENCES "cities" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "instruments_musicians" ADD CONSTRAINT "Relationship6" FOREIGN KEY ("musician_id") REFERENCES "musicians" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "instruments_musicians" ADD CONSTRAINT "Relationship7" FOREIGN KEY ("instrument_id") REFERENCES "instruments" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "bands_musicians" ADD CONSTRAINT "Relationship8" FOREIGN KEY ("bands_id") REFERENCES "bands" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+ALTER TABLE "bands_musicians" ADD CONSTRAINT "Relationship9" FOREIGN KEY ("musician_id") REFERENCES "musicians" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+;
+
+
+
+
