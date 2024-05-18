@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="log in">
-      <change afterPath="$PROJECT_DIR$/src/Signup.java" afterDir="false" />
+    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="log in and sign up">
+      <change afterPath="$PROJECT_DIR$/src/instruments.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Signup.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Signup.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +112,7 @@
       <updated>1716035631939</updated>
       <workItem from="1716035633009" duration="3363000" />
       <workItem from="1716048520812" duration="699000" />
-      <workItem from="1716049240204" duration="740000" />
+      <workItem from="1716049240204" duration="3631000" />
     </task>
     <task id="LOCAL−00001" summary="start">
       <option name="closed" value="true" />
@@ -148,7 +149,14 @@
       <option name="presentableId" value="LOCAL−00005" />
       <updated>1716049216858</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL−00006" summary="log in and sign up">
+      <option name="closed" value="true" />
+      <created>1716050023351</created>
+      <option name="number" value="LOCAL−00006" />
+      <option name="presentableId" value="LOCAL−00006" />
+      <updated>1716050023351</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -157,6 +165,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="start" />
     <MESSAGE value="log in" />
-    <option name="LAST_COMMIT_MESSAGE" value="log in" />
+    <MESSAGE value="log in and sign up" />
+    <option name="LAST_COMMIT_MESSAGE" value="log in and sign up" />
   </component>
 </project>

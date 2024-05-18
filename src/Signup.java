@@ -50,7 +50,18 @@ public class Signup extends Application {
                 passwordField.getText(), experienceField.getText(), videoField.getText(),
                 cityComboBox.getValue()));
 
-        VBox root = new VBox(10, nameField, surnameField, emailField, passwordField, experienceField, videoField, cityComboBox, signupButton);
+        Button backButton = new Button("Back to Login");
+        backButton.setOnAction(event -> {
+            Main main = new Main();
+            try {
+                main.start(new Stage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            primaryStage.close();
+        });
+
+        VBox root = new VBox(10, nameField, surnameField, emailField, passwordField, experienceField, videoField, cityComboBox, signupButton, backButton);
         Scene scene = new Scene(root, 400, 400);
 
         primaryStage.setScene(scene);
