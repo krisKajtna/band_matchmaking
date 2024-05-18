@@ -51,6 +51,15 @@ public class instruments extends Application {
 
         Button bandsButton = new Button("BANDS");
         bandsButton.setStyle("-fx-font-size: 14px;");
+        bandsButton.setOnAction(event -> {
+            create_band createBand = new create_band();
+            try {
+                createBand.start(new Stage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            primaryStage.close();
+        });
 
         HBox buttonsBox = new HBox(20, addInstrumentButton, bandsButton);
         buttonsBox.setAlignment(Pos.CENTER);
