@@ -1,14 +1,16 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
 public class Main extends Application {
 
@@ -18,28 +20,51 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        ListView<String> listView = new ListView<>();
+        TextField emailField = new TextField();
+        emailField.setPromptText("Email");
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Password");
+
+        Button loginButton = new Button("Login");
+        loginButton.setOnAction(event -> handleLogin(emailField.getText(), passwordField.getText()));
+
+        VBox root = new VBox(10, emailField, passwordField, loginButton);
+        Scene scene = new Scene(root, 300, 200);
+
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Musician Login");
+        primaryStage.show();
+    }
+
+    private void handleLogin(String email, String password) {
+        String query = "SELECT * FROM musicians WHERE mail = ? AND password = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT name FROM cities")) {
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            while (resultSet.next()) {
-                String city = resultSet.getString("name");
-                listView.getItems().add(city);
+            preparedStatement.setString(1, email);
+            preparedStatement.setString(2, password);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                showAlert(Alert.AlertType.INFORMATION, "Login Successful", "Welcome, " + resultSet.getString("name") + "!");
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            listView.getItems().add("Error loading cities");
+            showAlert(Alert.AlertType.ERROR, "Login Error", "An error occurred while trying to log in.");
         }
+    }
 
-        VBox root = new VBox(listView);
-        Scene scene = new Scene(root, 300, 400);
-
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Cities List");
-        primaryStage.show();
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     public static void main(String[] args) {
