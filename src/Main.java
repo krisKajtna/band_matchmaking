@@ -29,7 +29,17 @@ public class Main extends Application {
         Button loginButton = new Button("Login");
         loginButton.setOnAction(event -> handleLogin(emailField.getText(), passwordField.getText()));
 
-        VBox root = new VBox(10, emailField, passwordField, loginButton);
+        Button signupButton = new Button("Signup");
+        signupButton.setOnAction(event -> {
+            Signup signup = new Signup();
+            try {
+                signup.start(new Stage());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        VBox root = new VBox(10, emailField, passwordField, loginButton, signupButton);
         Scene scene = new Scene(root, 300, 200);
 
         primaryStage.setScene(scene);
