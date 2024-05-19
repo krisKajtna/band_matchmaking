@@ -52,16 +52,19 @@ public class instruments extends Application {
         Button bandsButton = new Button("BANDS");
         bandsButton.setStyle("-fx-font-size: 14px;");
         bandsButton.setOnAction(event -> {
-            create_band createBand = new create_band();
-            try {
-                createBand.start(new Stage());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            handleBandsButton(primaryStage);
+        });
+
+        Button profileButton = new Button("MY PROFILE");
+        profileButton.setStyle("-fx-font-size: 14px;");
+        profileButton.setOnAction(event -> {
+            my_profile profile = new my_profile();
+            profile.setMusicianId(musicianId);
+            profile.start(new Stage());
             primaryStage.close();
         });
 
-        HBox buttonsBox = new HBox(20, addInstrumentButton, bandsButton);
+        HBox buttonsBox = new HBox(20, addInstrumentButton, bandsButton, profileButton);
         buttonsBox.setAlignment(Pos.CENTER);
 
         VBox root = new VBox(20, titleLabel, instructionLabel, instrumentComboBox, buttonsBox);
@@ -131,6 +134,34 @@ public class instruments extends Application {
             } else {
                 showAlert(Alert.AlertType.ERROR, "Instrument Not Found", "The selected instrument was not found in the database.");
             }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while accessing the database.");
+        }
+    }
+
+    private void handleBandsButton(Stage primaryStage) {
+        String checkQuery = "SELECT bands_id FROM bands_musicians WHERE musician_id = ? AND status = 'accepted'";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement checkStatement = connection.prepareStatement(checkQuery)) {
+
+            checkStatement.setInt(1, musicianId);
+            ResultSet checkResultSet = checkStatement.executeQuery();
+
+            if (checkResultSet.next()) {
+                int bandId = checkResultSet.getInt("bands_id");
+                band band = new band();
+                band.setMusicianId(musicianId);
+                band.setBandId(bandId);
+                band.start(new Stage());
+            } else {
+                create_band createBand = new create_band();
+                createBand.setMusicianId(musicianId);
+                createBand.start(new Stage());
+            }
+            primaryStage.close();
 
         } catch (Exception e) {
             e.printStackTrace();

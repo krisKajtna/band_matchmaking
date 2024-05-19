@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="instument add orking perfect">
-      <change afterPath="$PROJECT_DIR$/src/create_band.java" afterDir="false" />
+    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="bands working">
+      <change afterPath="$PROJECT_DIR$/src/band.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/my_profile.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/create_band.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/create_band.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/instruments.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/instruments.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -111,7 +113,7 @@
       <updated>1716035631939</updated>
       <workItem from="1716035633009" duration="3363000" />
       <workItem from="1716048520812" duration="699000" />
-      <workItem from="1716049240204" duration="4608000" />
+      <workItem from="1716049240204" duration="12575000" />
     </task>
     <task id="LOCAL−00001" summary="start">
       <option name="closed" value="true" />
@@ -162,7 +164,14 @@
       <option name="presentableId" value="LOCAL−00007" />
       <updated>1716053039584</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL−00008" summary="bands working">
+      <option name="closed" value="true" />
+      <created>1716054531519</created>
+      <option name="number" value="LOCAL−00008" />
+      <option name="presentableId" value="LOCAL−00008" />
+      <updated>1716054531519</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -173,6 +182,7 @@
     <MESSAGE value="log in" />
     <MESSAGE value="log in and sign up" />
     <MESSAGE value="instument add orking perfect" />
-    <option name="LAST_COMMIT_MESSAGE" value="instument add orking perfect" />
+    <MESSAGE value="bands working" />
+    <option name="LAST_COMMIT_MESSAGE" value="bands working" />
   </component>
 </project>
