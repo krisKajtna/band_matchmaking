@@ -4,16 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="bands working added the invite musicians and my profile">
-      <change afterPath="$PROJECT_DIR$/src/band_view.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/edit_profile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/search.java" afterDir="false" />
+    <list default="true" id="d9cf86b6-1d82-4ba3-b335-b89eb7f93965" name="Changes" comment="strezniski podprogrami">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/band.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/band.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/instruments.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/instruments.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edit_profile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/edit_profile.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/my_profile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/my_profile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/profile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/profile.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +112,7 @@
       <updated>1716035631939</updated>
       <workItem from="1716035633009" duration="3363000" />
       <workItem from="1716048520812" duration="699000" />
-      <workItem from="1716049240204" duration="28287000" />
+      <workItem from="1716049240204" duration="29729000" />
     </task>
     <task id="LOCAL−00001" summary="start">
       <option name="closed" value="true" />
@@ -182,7 +177,14 @@
       <option name="presentableId" value="LOCAL−00009" />
       <updated>1716125881173</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL−00010" summary="strezniski podprogrami">
+      <option name="closed" value="true" />
+      <created>1716187641493</created>
+      <option name="number" value="LOCAL−00010" />
+      <option name="presentableId" value="LOCAL−00010" />
+      <updated>1716187641493</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -206,6 +208,7 @@
     <MESSAGE value="instument add orking perfect" />
     <MESSAGE value="bands working" />
     <MESSAGE value="bands working added the invite musicians and my profile" />
-    <option name="LAST_COMMIT_MESSAGE" value="bands working added the invite musicians and my profile" />
+    <MESSAGE value="strezniski podprogrami" />
+    <option name="LAST_COMMIT_MESSAGE" value="strezniski podprogrami" />
   </component>
 </project>

@@ -8,9 +8,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,37 +176,18 @@ public class my_profile extends Application {
     }
 
     private void loadMusicianInfo(Label nameValue, Label surnameValue, Label experienceValue, Label cityValue, Label bandValue) {
-        String musicianQuery = "SELECT musicians.name, musicians.surname, musicians.experience, cities.name AS city_name " +
-                "FROM musicians " +
-                "JOIN cities ON musicians.city_id = cities.id " +
-                "WHERE musicians.id = ?";
-
-        String bandQuery = "SELECT bands.name AS band_name " +
-                "FROM bands " +
-                "JOIN bands_musicians ON bands.id = bands_musicians.bands_id " +
-                "WHERE bands_musicians.musician_id = ? AND bands_musicians.status = 'accepted'";
+        String query = "{ call load_musician_info(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement musicianStatement = connection.prepareStatement(musicianQuery);
-             PreparedStatement bandStatement = connection.prepareStatement(bandQuery)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            // Load musician info
-            musicianStatement.setInt(1, musicianId);
-            ResultSet musicianResultSet = musicianStatement.executeQuery();
-            if (musicianResultSet.next()) {
-                nameValue.setText(musicianResultSet.getString("name"));
-                surnameValue.setText(musicianResultSet.getString("surname"));
-                experienceValue.setText(musicianResultSet.getString("experience"));
-                cityValue.setText(musicianResultSet.getString("city_name"));
-            }
-
-            // Load band info
-            bandStatement.setInt(1, musicianId);
-            ResultSet bandResultSet = bandStatement.executeQuery();
-            if (bandResultSet.next()) {
-                bandValue.setText(bandResultSet.getString("band_name"));
-            } else {
-                bandValue.setText("Not in a band");
+            callableStatement.setInt(1, musicianId);
+            ResultSet resultSet = callableStatement.executeQuery();
+            if (resultSet.next()) {
+                nameValue.setText(resultSet.getString("musician_name"));
+                surnameValue.setText(resultSet.getString("musician_surname"));
+                experienceValue.setText(String.valueOf(resultSet.getInt("musician_experience")));
+                cityValue.setText(resultSet.getString("city_name"));
             }
 
         } catch (Exception e) {
@@ -217,18 +198,15 @@ public class my_profile extends Application {
 
     private void loadBandRequests(TableView<BandRequest> requestsTable) {
         List<BandRequest> requests = new ArrayList<>();
-        String query = "SELECT bands.id, bands.name " +
-                "FROM bands " +
-                "JOIN bands_musicians ON bands.id = bands_musicians.bands_id " +
-                "WHERE bands_musicians.musician_id = ? AND bands_musicians.status = 'pending'";
+        String query = "{ call load_band_requests(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setInt(1, musicianId);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            callableStatement.setInt(1, musicianId);
+            ResultSet resultSet = callableStatement.executeQuery();
             while (resultSet.next()) {
-                requests.add(new BandRequest(resultSet.getInt("id"), resultSet.getString("name")));
+                requests.add(new BandRequest(resultSet.getInt("band_id"), resultSet.getString("band_name")));
             }
 
         } catch (Exception e) {
@@ -240,26 +218,16 @@ public class my_profile extends Application {
     }
 
     private void handleRequest(BandRequest request, String status, TableView<BandRequest> requestsTable) {
-        String query;
-        if (status.equals("declined")) {
-            query = "DELETE FROM bands_musicians WHERE bands_id = ? AND musician_id = ?";
-        } else {
-            query = "UPDATE bands_musicians SET status = ? WHERE bands_id = ? AND musician_id = ?";
-        }
+        String query = "{ call handle_request(?, ?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            if (status.equals("declined")) {
-                preparedStatement.setInt(1, request.getBandId());
-                preparedStatement.setInt(2, musicianId);
-            } else {
-                preparedStatement.setString(1, status);
-                preparedStatement.setInt(2, request.getBandId());
-                preparedStatement.setInt(3, musicianId);
-            }
+            callableStatement.setInt(1, request.getBandId());
+            callableStatement.setInt(2, musicianId);
+            callableStatement.setString(3, status);
 
-            int rowsAffected = preparedStatement.executeUpdate();
+            int rowsAffected = callableStatement.executeUpdate();
             if (rowsAffected > 0) {
                 String message = status.equals("declined") ? "The request has been declined and removed." : "The request has been " + status + ".";
                 showAlert(Alert.AlertType.INFORMATION, "Request " + status, message);

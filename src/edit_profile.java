@@ -7,9 +7,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class edit_profile extends Application {
@@ -40,7 +40,7 @@ public class edit_profile extends Application {
         ComboBox<String> cityComboBox = new ComboBox<>();
 
         // Load current information and cities
-        loadMusicianInfo(nameField, surnameField, experienceField, cityComboBox);
+        loadMusicianInfoAndCities(nameField, surnameField, experienceField, cityComboBox);
 
         // Buttons
         Button updateButton = new Button("Update");
@@ -84,30 +84,27 @@ public class edit_profile extends Application {
         primaryStage.show();
     }
 
-    private void loadMusicianInfo(TextField nameField, TextField surnameField, TextField experienceField, ComboBox<String> cityComboBox) {
-        String query = "SELECT musicians.name, musicians.surname, musicians.experience, cities.name AS city_name, musicians.city_id " +
-                "FROM musicians " +
-                "JOIN cities ON musicians.city_id = cities.id " +
-                "WHERE musicians.id = ?";
-        String citiesQuery = "SELECT name FROM cities";
+    private void loadMusicianInfoAndCities(TextField nameField, TextField surnameField, TextField experienceField, ComboBox<String> cityComboBox) {
+        String query = "{ call load_musician_info_and_cities(?) }";
+        String citiesQuery = "{ call load_cities() }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement musicianStatement = connection.prepareStatement(query);
-             PreparedStatement citiesStatement = connection.prepareStatement(citiesQuery)) {
+             CallableStatement musicianCallableStatement = connection.prepareCall(query);
+             CallableStatement citiesCallableStatement = connection.prepareCall(citiesQuery)) {
 
             // Load musician info
-            musicianStatement.setInt(1, musicianId);
-            ResultSet musicianResultSet = musicianStatement.executeQuery();
+            musicianCallableStatement.setInt(1, musicianId);
+            ResultSet musicianResultSet = musicianCallableStatement.executeQuery();
             if (musicianResultSet.next()) {
-                nameField.setText(musicianResultSet.getString("name"));
-                surnameField.setText(musicianResultSet.getString("surname"));
-                experienceField.setText(String.valueOf(musicianResultSet.getInt("experience")));
+                nameField.setText(musicianResultSet.getString("musician_name"));
+                surnameField.setText(musicianResultSet.getString("musician_surname"));
+                experienceField.setText(String.valueOf(musicianResultSet.getInt("musician_experience")));
                 String currentCity = musicianResultSet.getString("city_name");
 
                 // Load cities
-                ResultSet citiesResultSet = citiesStatement.executeQuery();
+                ResultSet citiesResultSet = citiesCallableStatement.executeQuery();
                 while (citiesResultSet.next()) {
-                    cityComboBox.getItems().add(citiesResultSet.getString("name"));
+                    cityComboBox.getItems().add(citiesResultSet.getString("city_name"));
                 }
 
                 cityComboBox.setValue(currentCity); // Set current city as selected
@@ -120,24 +117,19 @@ public class edit_profile extends Application {
     }
 
     private void updateMusicianInfo(String name, String surname, int experience, String city) {
-        String query = "UPDATE musicians SET name = ?, surname = ?, experience = ?, city_id = " +
-                "(SELECT id FROM cities WHERE name = ?) WHERE id = ?";
+        String query = "{ call update_musician_info(?, ?, ?, ?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setString(1, name);
-            preparedStatement.setString(2, surname);
-            preparedStatement.setInt(3, experience);
-            preparedStatement.setString(4, city);
-            preparedStatement.setInt(5, musicianId);
+            callableStatement.setInt(1, musicianId);
+            callableStatement.setString(2, name);
+            callableStatement.setString(3, surname);
+            callableStatement.setInt(4, experience);
+            callableStatement.setString(5, city);
 
-            int rowsAffected = preparedStatement.executeUpdate();
-            if (rowsAffected > 0) {
-                showAlert(Alert.AlertType.INFORMATION, "Update Successful", "Musician information updated successfully.");
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Update Failed", "Failed to update musician information.");
-            }
+            callableStatement.executeUpdate();
+            showAlert(Alert.AlertType.INFORMATION, "Update Successful", "Musician information updated successfully.");
 
         } catch (Exception e) {
             e.printStackTrace();

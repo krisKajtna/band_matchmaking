@@ -1,16 +1,21 @@
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +26,7 @@ public class band extends Application {
     private static final String USER = "band_match_owner";
     private static final String PASSWORD = "U5FJBfvqLa4D";
     private int musicianId;
-    private int bandId; // Assume this is set when the band is created
+    private int bandId;
 
     public void setMusicianId(int musicianId) {
         this.musicianId = musicianId;
@@ -61,7 +66,6 @@ public class band extends Application {
 
         // Members
         TableView<Member> membersTable = new TableView<>();
-        membersTable.setId("membersTable");
         TableColumn<Member, String> memberNameColumn = new TableColumn<>("Name");
         memberNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         TableColumn<Member, String> memberSurnameColumn = new TableColumn<>("surname");
@@ -156,17 +160,13 @@ public class band extends Application {
     }
 
     private void loadBandInfo(Label nameValue, Label genreValue, Label cityValue) {
-        String query = "SELECT bands.name AS band_name, genres.name AS genre_name, cities.name AS city_name " +
-                "FROM bands " +
-                "JOIN genres ON bands.genre_id = genres.id " +
-                "JOIN cities ON bands.city_id = cities.id " +
-                "WHERE bands.id = ?";
+        String query = "{ call load_band_info(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setInt(1, bandId);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            callableStatement.setInt(1, bandId);
+            ResultSet resultSet = callableStatement.executeQuery();
             if (resultSet.next()) {
                 nameValue.setText(resultSet.getString("band_name"));
                 genreValue.setText(resultSet.getString("genre_name"));
@@ -181,18 +181,15 @@ public class band extends Application {
 
     private void loadMembers(TableView<Member> membersTable) {
         List<Member> members = new ArrayList<>();
-        String query = "SELECT musicians.id, musicians.name, musicians.surname " +
-                "FROM musicians " +
-                "JOIN bands_musicians ON musicians.id = bands_musicians.musician_id " +
-                "WHERE bands_musicians.bands_id = ? AND bands_musicians.status = 'accepted'";
+        String query = "{ call load_band_members(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setInt(1, bandId);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            callableStatement.setInt(1, bandId);
+            ResultSet resultSet = callableStatement.executeQuery();
             while (resultSet.next()) {
-                members.add(new Member(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("surname")));
+                members.add(new Member(resultSet.getInt("musician_id"), resultSet.getString("musician_name"), resultSet.getString("musician_surname")));
             }
 
         } catch (Exception e) {
@@ -205,18 +202,15 @@ public class band extends Application {
 
     private void loadPendingInvites(TableView<Member> invitesTable) {
         List<Member> invites = new ArrayList<>();
-        String query = "SELECT musicians.id, musicians.name, musicians.surname " +
-                "FROM musicians " +
-                "JOIN bands_musicians ON musicians.id = bands_musicians.musician_id " +
-                "WHERE bands_musicians.bands_id = ? AND bands_musicians.status = 'pending'";
+        String query = "{ call load_pending_invites(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setInt(1, bandId);
-            ResultSet resultSet = preparedStatement.executeQuery();
+            callableStatement.setInt(1, bandId);
+            ResultSet resultSet = callableStatement.executeQuery();
             while (resultSet.next()) {
-                invites.add(new Member(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("surname")));
+                invites.add(new Member(resultSet.getInt("musician_id"), resultSet.getString("musician_name"), resultSet.getString("musician_surname")));
             }
 
         } catch (Exception e) {
@@ -228,14 +222,14 @@ public class band extends Application {
     }
 
     private void handleRemove(Member member, TableView<Member> membersTable) {
-        String query = "DELETE FROM bands_musicians WHERE bands_id = ? AND musician_id = ? AND status = 'accepted'";
+        String query = "{ call remove_band_member(?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setInt(1, bandId);
-            preparedStatement.setInt(2, member.getId());
-            int rowsAffected = preparedStatement.executeUpdate();
+            callableStatement.setInt(1, bandId);
+            callableStatement.setInt(2, member.getId());
+            int rowsAffected = callableStatement.executeUpdate();
             if (rowsAffected > 0) {
                 showAlert(Alert.AlertType.INFORMATION, "Member Removed", "The member has been removed from the band.");
                 loadMembers(membersTable); // Refresh the members table
