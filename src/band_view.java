@@ -15,26 +15,39 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-public class band extends Application {
+public class band_view extends Application {
 
     private static final String URL = "jdbc:postgresql://ep-rapid-wind-a2vh6va0.eu-central-1.aws.neon.tech:5432/band_match";
     private static final String USER = "band_match_owner";
     private static final String PASSWORD = "U5FJBfvqLa4D";
-    private int musicianId;
     private int bandId; // Assume this is set when the band is created
-
-    public void setMusicianId(int musicianId) {
-        this.musicianId = musicianId;
-    }
+    private int loggedInMusicianId; // Store the logged-in musician's ID
 
     public void setBandId(int bandId) {
         this.bandId = bandId;
+    }
+
+    public void setLoggedInMusicianId(int loggedInMusicianId) {
+        this.loggedInMusicianId = loggedInMusicianId;
     }
 
     @Override
     public void start(Stage primaryStage) {
         Label titleLabel = new Label("BAND");
         titleLabel.setStyle("-fx-font-size: 30px; -fx-font-weight: bold;");
+
+        // Back Button
+        Button backButton = new Button("Back");
+        backButton.setOnAction(event -> {
+            my_profile profilePage = new my_profile();
+            profilePage.setMusicianId(loggedInMusicianId); // Use the logged-in musician's ID
+            try {
+                profilePage.start(new Stage());
+                primaryStage.close(); // Close the current band_view stage
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         // Band Information
         Label nameLabel = new Label("Name:");
@@ -43,9 +56,6 @@ public class band extends Application {
         Label nameValue = new Label();
         Label genreValue = new Label();
         Label cityValue = new Label();
-
-        Button editButton = new Button("Edit");
-        editButton.setOnAction(event -> showAlert(Alert.AlertType.INFORMATION, "Edit", "Edit functionality is not implemented yet."));
 
         // Layout for band information
         GridPane infoGrid = new GridPane();
@@ -57,14 +67,13 @@ public class band extends Application {
         infoGrid.add(genreValue, 1, 1);
         infoGrid.add(cityLabel, 0, 2);
         infoGrid.add(cityValue, 1, 2);
-        infoGrid.add(editButton, 1, 3);
 
         // Members
         TableView<Member> membersTable = new TableView<>();
         membersTable.setId("membersTable");
         TableColumn<Member, String> memberNameColumn = new TableColumn<>("Name");
         memberNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        TableColumn<Member, String> memberSurnameColumn = new TableColumn<>("surname");
+        TableColumn<Member, String> memberSurnameColumn = new TableColumn<>("Surname");
         memberSurnameColumn.setCellValueFactory(new PropertyValueFactory<>("surname"));
         TableColumn<Member, Void> viewProfileColumn = new TableColumn<>("View");
         viewProfileColumn.setCellFactory(col -> new TableCell<Member, Void>() {
@@ -73,7 +82,8 @@ public class band extends Application {
             {
                 viewButton.setOnAction(event -> {
                     Member member = getTableView().getItems().get(getIndex());
-                    openProfile(member.getId(), primaryStage);
+                    // Add functionality to view member profile if needed
+                    showAlert(Alert.AlertType.INFORMATION, "Member Profile", "This feature has not been implemented yet.");
                 });
             }
 
@@ -88,70 +98,25 @@ public class band extends Application {
             }
         });
 
-        TableColumn<Member, Void> removeMemberColumn = new TableColumn<>("Remove");
-        removeMemberColumn.setCellFactory(col -> new TableCell<Member, Void>() {
-            private final Button removeButton = new Button("Remove");
-
-            {
-                removeButton.setOnAction(event -> {
-                    Member member = getTableView().getItems().get(getIndex());
-                    handleRemove(member, membersTable);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(removeButton);
-                }
-            }
-        });
-
-        membersTable.getColumns().addAll(memberNameColumn, memberSurnameColumn, viewProfileColumn, removeMemberColumn);
-
-        // Pending Invites
-        TableView<Member> invitesTable = new TableView<>();
-        TableColumn<Member, String> inviteNameColumn = new TableColumn<>("Name");
-        inviteNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        TableColumn<Member, String> inviteSurnameColumn = new TableColumn<>("surname");
-        inviteSurnameColumn.setCellValueFactory(new PropertyValueFactory<>("surname"));
-        invitesTable.getColumns().addAll(inviteNameColumn, inviteSurnameColumn);
+        membersTable.getColumns().addAll(memberNameColumn, memberSurnameColumn, viewProfileColumn);
 
         // Load data
         loadBandInfo(nameValue, genreValue, cityValue);
         loadMembers(membersTable);
-        loadPendingInvites(invitesTable);
-
-        // Search for Musicians Button
-        Button searchButton = new Button("Search for Musicians");
-        searchButton.setOnAction(event -> {
-            search searchPage = new search();
-            searchPage.setBandId(bandId);
-            try {
-                searchPage.start(new Stage());
-                primaryStage.close(); // Close the current band stage
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
 
         // Layout
         VBox infoBox = new VBox(10, new Label("Information:"), infoGrid);
         VBox membersBox = new VBox(10, new Label("Members:"), membersTable);
-        VBox invitesBox = new VBox(10, new Label("Pending invites:"), invitesTable);
 
-        HBox mainLayout = new HBox(20, infoBox, membersBox, invitesBox);
-        VBox root = new VBox(20, titleLabel, mainLayout, searchButton);
+        HBox mainLayout = new HBox(20, infoBox, membersBox);
+        VBox root = new VBox(20, backButton, titleLabel, mainLayout);
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-padding: 20; -fx-border-color: black; -fx-border-width: 2px;");
 
         Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Band");
+        primaryStage.setTitle("Band View");
         primaryStage.show();
     }
 
@@ -201,64 +166,6 @@ public class band extends Application {
         }
 
         membersTable.getItems().setAll(members);
-    }
-
-    private void loadPendingInvites(TableView<Member> invitesTable) {
-        List<Member> invites = new ArrayList<>();
-        String query = "SELECT musicians.id, musicians.name, musicians.surname " +
-                "FROM musicians " +
-                "JOIN bands_musicians ON musicians.id = bands_musicians.musician_id " +
-                "WHERE bands_musicians.bands_id = ? AND bands_musicians.status = 'pending'";
-
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setInt(1, bandId);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                invites.add(new Member(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("surname")));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while accessing the database.");
-        }
-
-        invitesTable.getItems().setAll(invites);
-    }
-
-    private void handleRemove(Member member, TableView<Member> membersTable) {
-        String query = "DELETE FROM bands_musicians WHERE bands_id = ? AND musician_id = ? AND status = 'accepted'";
-
-        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setInt(1, bandId);
-            preparedStatement.setInt(2, member.getId());
-            int rowsAffected = preparedStatement.executeUpdate();
-            if (rowsAffected > 0) {
-                showAlert(Alert.AlertType.INFORMATION, "Member Removed", "The member has been removed from the band.");
-                loadMembers(membersTable); // Refresh the members table
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Remove Failed", "Failed to remove the member.");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while accessing the database.");
-        }
-    }
-
-    private void openProfile(int musicianId, Stage bandStage) {
-        profile profile = new profile();
-        profile.setMusicianId(musicianId);
-        profile.setBandId(bandId);
-        try {
-            profile.start(new Stage());
-            bandStage.close(); // Close the current band stage
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private void showAlert(Alert.AlertType alertType, String title, String message) {

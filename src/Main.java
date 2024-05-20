@@ -7,9 +7,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class Main extends Application {
@@ -50,18 +50,18 @@ public class Main extends Application {
     }
 
     private void handleLogin(String email, String password, Stage loginStage) {
-        String query = "SELECT * FROM musicians WHERE mail = ? AND password = ?";
+        String query = "{ call authenticate_musician(?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            preparedStatement.setString(1, email);
-            preparedStatement.setString(2, password);
+            callableStatement.setString(1, email);
+            callableStatement.setString(2, password);
 
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                loggedInMusicianId = resultSet.getInt("id");
-                showAlert(Alert.AlertType.INFORMATION, "Login Successful", "Welcome, " + resultSet.getString("name") + "!");
+            ResultSet resultSet = callableStatement.executeQuery();
+            if (resultSet.next() && resultSet.getBoolean("success")) {
+                loggedInMusicianId = resultSet.getInt("musician_id");
+                showAlert(Alert.AlertType.INFORMATION, "Login Successful", "Welcome, " + resultSet.getString("musician_name") + "!");
                 instruments instruments = new instruments();
                 instruments.setMusicianId(loggedInMusicianId);
                 instruments.start(new Stage());

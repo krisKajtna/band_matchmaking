@@ -9,9 +9,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,14 +67,14 @@ public class create_band extends Application {
 
     private void populateGenreComboBox(ComboBox<String> genreComboBox) {
         List<String> genres = new ArrayList<>();
-        String query = "SELECT name FROM genres";
+        String query = "{ call populate_genres() }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+             CallableStatement callableStatement = connection.prepareCall(query);
+             ResultSet resultSet = callableStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                String name = resultSet.getString("name");
+                String name = resultSet.getString("genre_name");
                 genres.add(name);
             }
 
@@ -87,14 +87,14 @@ public class create_band extends Application {
 
     private void populateCityComboBox(ComboBox<String> cityComboBox) {
         List<String> cities = new ArrayList<>();
-        String query = "SELECT name FROM cities";
+        String query = "{ call populate_cities() }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+             CallableStatement callableStatement = connection.prepareCall(query);
+             ResultSet resultSet = callableStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                String name = resultSet.getString("name");
+                String name = resultSet.getString("city_name");
                 cities.add(name);
             }
 
@@ -106,16 +106,16 @@ public class create_band extends Application {
     }
 
     private void handleCreateBand(String bandName, String genreName, String cityName, Stage primaryStage) {
-        String genreQuery = "SELECT id FROM genres WHERE name = ?";
-        String cityQuery = "SELECT id FROM cities WHERE name = ?";
-        String insertBandQuery = "INSERT INTO bands (name, genre_id, city_id, no_musicians) VALUES (?, ?, ?, 0)";
-        String insertBandMusicianQuery = "INSERT INTO bands_musicians (bands_id, musician_id, status) VALUES (?, ?, 'accepted')";
+        String genreQuery = "{ call get_genre_id(?) }";
+        String cityQuery = "{ call get_city_id(?) }";
+        String insertBandQuery = "{ call insert_band(?, ?, ?) }";
+        String insertBandMusicianQuery = "{ call insert_band_musician(?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement genreStatement = connection.prepareStatement(genreQuery);
-             PreparedStatement cityStatement = connection.prepareStatement(cityQuery);
-             PreparedStatement insertBandStatement = connection.prepareStatement(insertBandQuery, PreparedStatement.RETURN_GENERATED_KEYS);
-             PreparedStatement insertBandMusicianStatement = connection.prepareStatement(insertBandMusicianQuery)) {
+             CallableStatement genreStatement = connection.prepareCall(genreQuery);
+             CallableStatement cityStatement = connection.prepareCall(cityQuery);
+             CallableStatement insertBandStatement = connection.prepareCall(insertBandQuery);
+             CallableStatement insertBandMusicianStatement = connection.prepareCall(insertBandMusicianQuery)) {
 
             // Get the genre ID from the genre name
             genreStatement.setString(1, genreName);
@@ -124,7 +124,7 @@ public class create_band extends Application {
                 showAlert(Alert.AlertType.ERROR, "Genre Not Found", "The selected genre was not found in the database.");
                 return;
             }
-            int genreId = genreResultSet.getInt("id");
+            int genreId = genreResultSet.getInt(1);
 
             // Get the city ID from the city name
             cityStatement.setString(1, cityName);
@@ -133,30 +133,26 @@ public class create_band extends Application {
                 showAlert(Alert.AlertType.ERROR, "City Not Found", "The selected city was not found in the database.");
                 return;
             }
-            int cityId = cityResultSet.getInt("id");
+            int cityId = cityResultSet.getInt(1);
 
             // Insert the new band into the bands table
             insertBandStatement.setString(1, bandName);
             insertBandStatement.setInt(2, genreId);
             insertBandStatement.setInt(3, cityId);
-            int rowsAffected = insertBandStatement.executeUpdate();
-            if (rowsAffected > 0) {
-                ResultSet generatedKeys = insertBandStatement.getGeneratedKeys();
-                if (generatedKeys.next()) {
-                    int bandId = generatedKeys.getInt(1);
+            ResultSet insertBandResultSet = insertBandStatement.executeQuery();
+            if (insertBandResultSet.next()) {
+                int bandId = insertBandResultSet.getInt(1);
 
-                    // Insert the musician into the bands_musicians table
-                    insertBandMusicianStatement.setInt(1, bandId);
-                    insertBandMusicianStatement.setInt(2, musicianId);
-                    insertBandMusicianStatement.executeUpdate();
-
-                    showAlert(Alert.AlertType.INFORMATION, "Band Created", "The band has been successfully created.");
-                    band band = new band();
-                    band.setMusicianId(musicianId);
-                    band.setBandId(bandId);
-                    band.start(new Stage());
-                    primaryStage.close();
-                }
+                // Insert the musician into the bands_musicians table
+                insertBandMusicianStatement.setInt(1, bandId);
+                insertBandMusicianStatement.setInt(2, musicianId);
+                insertBandMusicianStatement.execute();
+                showAlert(Alert.AlertType.INFORMATION, "Band Created", "The band has been successfully created.");
+                band band = new band();
+                band.setMusicianId(musicianId);
+                band.setBandId(bandId);
+                band.start(new Stage());
+                primaryStage.close();
             } else {
                 showAlert(Alert.AlertType.ERROR, "Insert Failed", "Failed to create the band.");
             }

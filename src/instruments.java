@@ -9,9 +9,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ public class instruments extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        Label titleLabel = new Label("INŠTRUMENTI");
+        Label titleLabel = new Label("INSTRUMENTS");
         titleLabel.setStyle("-fx-font-size: 30px; -fx-font-weight: bold;");
 
         Label instructionLabel = new Label("WHAT INSTRUMENTS DO YOU PLAY:");
@@ -80,14 +80,14 @@ public class instruments extends Application {
 
     private void populateInstrumentComboBox(ComboBox<String> instrumentComboBox) {
         List<String> instruments = new ArrayList<>();
-        String query = "SELECT name FROM instruments";
+        String query = "{ call get_instruments() }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+             CallableStatement callableStatement = connection.prepareCall(query);
+             ResultSet resultSet = callableStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                String name = resultSet.getString("name");
+                String name = resultSet.getString("instrument_name");
                 instruments.add(name);
             }
 
@@ -99,37 +99,33 @@ public class instruments extends Application {
     }
 
     private void handleAddInstrument(String instrumentName) {
-        String selectQuery = "SELECT id FROM instruments WHERE name = ?";
-        String checkQuery = "SELECT * FROM instruments_musicians WHERE musician_id = ? AND instrument_id = ?";
-        String insertQuery = "INSERT INTO instruments_musicians (musician_id, instrument_id) VALUES (?, ?)";
+        String getIdQuery = "{ call get_instrument_id(?) }";
+        String checkQuery = "{ call check_instrument_added(?, ?) }";
+        String insertQuery = "{ call add_instrument(?, ?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement selectStatement = connection.prepareStatement(selectQuery);
-             PreparedStatement checkStatement = connection.prepareStatement(checkQuery);
-             PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
+             CallableStatement getIdStatement = connection.prepareCall(getIdQuery);
+             CallableStatement checkStatement = connection.prepareCall(checkQuery);
+             CallableStatement insertStatement = connection.prepareCall(insertQuery)) {
 
             // Get the instrument ID from the instrument name
-            selectStatement.setString(1, instrumentName);
-            ResultSet selectResultSet = selectStatement.executeQuery();
-            if (selectResultSet.next()) {
-                int instrumentId = selectResultSet.getInt("id");
+            getIdStatement.setString(1, instrumentName);
+            ResultSet getIdResultSet = getIdStatement.executeQuery();
+            if (getIdResultSet.next()) {
+                int instrumentId = getIdResultSet.getInt(1);
 
                 // Check if the instrument is already added for the musician
                 checkStatement.setInt(1, musicianId);
                 checkStatement.setInt(2, instrumentId);
                 ResultSet checkResultSet = checkStatement.executeQuery();
-                if (checkResultSet.next()) {
+                if (checkResultSet.next() && checkResultSet.getBoolean(1)) {
                     showAlert(Alert.AlertType.ERROR, "Already Selected", "You have already selected this instrument.");
                 } else {
                     // Insert the new instrument for the musician
                     insertStatement.setInt(1, musicianId);
                     insertStatement.setInt(2, instrumentId);
-                    int rowsAffected = insertStatement.executeUpdate();
-                    if (rowsAffected > 0) {
-                        showAlert(Alert.AlertType.INFORMATION, "Successfully Added", "The instrument has been successfully added.");
-                    } else {
-                        showAlert(Alert.AlertType.ERROR, "Insert Failed", "Failed to add the instrument.");
-                    }
+                    insertStatement.execute();
+                    showAlert(Alert.AlertType.INFORMATION, "Successfully Added", "The instrument has been successfully added.");
                 }
             } else {
                 showAlert(Alert.AlertType.ERROR, "Instrument Not Found", "The selected instrument was not found in the database.");
@@ -142,16 +138,16 @@ public class instruments extends Application {
     }
 
     private void handleBandsButton(Stage primaryStage) {
-        String checkQuery = "SELECT bands_id FROM bands_musicians WHERE musician_id = ? AND status = 'accepted'";
+        String query = "{ call check_musician_band(?) }";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement checkStatement = connection.prepareStatement(checkQuery)) {
+             CallableStatement callableStatement = connection.prepareCall(query)) {
 
-            checkStatement.setInt(1, musicianId);
-            ResultSet checkResultSet = checkStatement.executeQuery();
+            callableStatement.setInt(1, musicianId);
+            ResultSet resultSet = callableStatement.executeQuery();
 
-            if (checkResultSet.next()) {
-                int bandId = checkResultSet.getInt("bands_id");
+            if (resultSet.next()) {
+                int bandId = resultSet.getInt("bands_id");
                 band band = new band();
                 band.setMusicianId(musicianId);
                 band.setBandId(bandId);

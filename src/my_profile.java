@@ -45,7 +45,29 @@ public class my_profile extends Application {
         Label bandValue = new Label();
 
         Button editButton = new Button("Edit");
-        editButton.setOnAction(event -> showAlert(Alert.AlertType.INFORMATION, "Edit", "Edit functionality is not implemented yet."));
+        editButton.setOnAction(event -> {
+            edit_profile editProfilePage = new edit_profile();
+            editProfilePage.setMusicianId(musicianId);
+            try {
+                editProfilePage.start(new Stage());
+                primaryStage.close(); // Close the current my_profile stage
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Back Button
+        Button backButton = new Button("Back");
+        backButton.setOnAction(event -> {
+            instruments instrumentsPage = new instruments();
+            instrumentsPage.setMusicianId(musicianId); // Pass the logged-in musician ID
+            try {
+                instrumentsPage.start(new Stage());
+                primaryStage.close(); // Close the current my_profile stage
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         // Layout for musician information
         GridPane infoGrid = new GridPane();
@@ -75,6 +97,7 @@ public class my_profile extends Application {
                 viewButton.setOnAction(event -> {
                     BandRequest request = getTableView().getItems().get(getIndex());
                     showAlert(Alert.AlertType.INFORMATION, "Band Profile", "Band profile view is not implemented yet.");
+                    openBandView(primaryStage, request.getBandId());
                 });
             }
 
@@ -141,7 +164,7 @@ public class my_profile extends Application {
         VBox requestsBox = new VBox(10, new Label("Requests:"), requestsTable);
 
         HBox mainLayout = new HBox(20, infoBox, requestsBox);
-        VBox root = new VBox(20, titleLabel, mainLayout);
+        VBox root = new VBox(20, titleLabel, mainLayout, backButton);
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-padding: 20; -fx-border-color: black; -fx-border-width: 2px;");
 
@@ -217,17 +240,29 @@ public class my_profile extends Application {
     }
 
     private void handleRequest(BandRequest request, String status, TableView<BandRequest> requestsTable) {
-        String query = "UPDATE bands_musicians SET status = ? WHERE bands_id = ? AND musician_id = ?";
+        String query;
+        if (status.equals("declined")) {
+            query = "DELETE FROM bands_musicians WHERE bands_id = ? AND musician_id = ?";
+        } else {
+            query = "UPDATE bands_musicians SET status = ? WHERE bands_id = ? AND musician_id = ?";
+        }
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setString(1, status);
-            preparedStatement.setInt(2, request.getBandId());
-            preparedStatement.setInt(3, musicianId);
+            if (status.equals("declined")) {
+                preparedStatement.setInt(1, request.getBandId());
+                preparedStatement.setInt(2, musicianId);
+            } else {
+                preparedStatement.setString(1, status);
+                preparedStatement.setInt(2, request.getBandId());
+                preparedStatement.setInt(3, musicianId);
+            }
+
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected > 0) {
-                showAlert(Alert.AlertType.INFORMATION, "Request " + status, "The request has been " + status + ".");
+                String message = status.equals("declined") ? "The request has been declined and removed." : "The request has been " + status + ".";
+                showAlert(Alert.AlertType.INFORMATION, "Request " + status, message);
                 loadBandRequests(requestsTable);
             } else {
                 showAlert(Alert.AlertType.ERROR, "Request Failed", "Failed to update the request.");
@@ -245,6 +280,18 @@ public class my_profile extends Application {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private void openBandView(Stage currentStage, int bandId) {
+        band_view bandViewPage = new band_view();
+        bandViewPage.setBandId(bandId);
+        bandViewPage.setLoggedInMusicianId(musicianId); // Pass the logged-in musician ID
+        try {
+            bandViewPage.start(new Stage());
+            currentStage.close(); // Close the current stage
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
